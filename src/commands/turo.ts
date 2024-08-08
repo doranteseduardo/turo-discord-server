@@ -45,11 +45,8 @@ const turoCommand: ICommand = {
       }),
       headers: {
         "Content-Type": "application/json",
-        headers: {
-          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-          "x-rapidapi-host": process.env.RAPIDAPI_HOST,
-          "Content-Type": "application/json",
-        },
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+        "x-rapidapi-host": process.env.RAPIDAPI_HOST,
       },
     });
 
