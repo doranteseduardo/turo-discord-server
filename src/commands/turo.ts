@@ -50,8 +50,9 @@ const turoCommand: ICommand = {
       },
     });
 
-    if (request) {
+    if (request && request.status == 200) {
       const response: ITuroResponse = (await request.json()) as ITuroResponse;
+      // handle request status
       if (response.content?.length > 2000) {
         await interaction.editReply(
           "I'm sorry I can not process your request."
