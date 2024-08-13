@@ -29,39 +29,45 @@ const turoCommand: ICommand = {
   // when a user sends the command in to the bot. In this case,
   // it simply replies to the user with the string "pong!"
   async execute(interaction) {
-    const reason = interaction.options.get("prompt") ?? "";
+    const reason = interaction.options.get("prompt")?.value ?? "";
 
     if (!reason) {
-      await interaction.reply("You can not pass an empty prompt!");
+      await interaction.reply("You cannot pass an empty prompt!");
       return;
     }
 
     await interaction.deferReply();
 
-    const request = await fetch(process.env.TURO_URL, {
-      method: "post",
-      body: JSON.stringify({
-        query: reason.value,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-        "x-rapidapi-host": process.env.RAPIDAPI_HOST,
-      },
-    });
+    try {
+      const response = await fetch(process.env.TURO_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          query: reason,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+          "x-rapidapi-host": process.env.RAPIDAPI_HOST,
+        },
+      });
 
-    if (request && request.status == 200) {
-      const response: ITuroResponse = (await request.json()) as ITuroResponse;
-      // handle request status
-      if (response.content?.length > 2000) {
-        await interaction.editReply(
-          "I'm sorry I can not process your request."
-        );
+      if (response.ok) {
+        const data: ITuroResponse = await response.json();
+        if (data.content?.length > 2000) {
+          await interaction.editReply(
+            "I'm sorry I cannot process your request."
+          );
+        } else {
+          await interaction.editReply(data.content);
+        }
       } else {
-        await interaction.editReply(response.content);
+        await interaction.editReply("I'm sorry I cannot process your request.");
       }
-    } else {
-      await interaction.editReply("I'm sorry I can not process your request.");
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      await interaction.editReply(
+        "An error occurred while processing your request."
+      );
     }
   },
 };
