@@ -3,18 +3,15 @@ import { ICommand } from "../interfaces/ICommand";
 import { ITuroResponse } from "../interfaces/ITuroResponse";
 const fetch = require("node-fetch");
 
-// This askCommand const will hold the ICommand object,
-// which has data about the command, and an execute function
-// which gets run when a user types the command.
-const turoCommand: ICommand = {
-  // To properly organize each command's information,
-  // you must create a SlashCommandBuilder object, and
-  // set its properties - here its name and description.
+interface TuroRequest {
+  query: string;
+}
 
-  // If you wanted to add an argument for your commands for instance,
-  // you would do that with one of the SlashCommandBuilder's methods.
-  // The "Slash Commands" section from "discordjs.guide" has really
-  // good information about how to do that.
+interface TuroErrorResponse {
+  error: string;
+}
+
+const turoCommand: ICommand = {
   data: new SlashCommandBuilder()
     .setName("turo")
     .addStringOption((option) =>
@@ -25,48 +22,61 @@ const turoCommand: ICommand = {
     )
     .setDescription("Ask Turo anything about Pokémon UNITE!"),
 
-  // Here, we define the execute function, which gets run
-  // when a user sends the command in to the bot. In this case,
-  // it simply replies to the user with the string "pong!"
   async execute(interaction) {
-    const reason = interaction.options.get("prompt") ?? "";
+    const prompt = interaction.options.getString("prompt", true);
 
-    if (!reason) {
+    if (!prompt) {
       await interaction.reply("You can not pass an empty prompt!");
       return;
     }
 
     await interaction.deferReply();
 
-    const request = await fetch(process.env.TURO_URL, {
+    try {
+      const response = await makeTuroRequest(prompt);
+      const turoResponse = await response.json();
+
+      if (turoResponse.content && turoResponse.content.length > 2000) {
+        await interaction.editReply(
+          "I'm sorry I can not process your request."
+        );
+      } else {
+        await interaction.editReply(turoResponse.content);
+      }
+    } catch (error) {
+      console.error(error);
+      await interaction.editReply("I'm sorry I can not process your request.");
+    }
+  },
+};
+
+async function makeTuroRequest(prompt: string): Promise<Response> {
+  if (
+    !process.env.TURO_URL ||
+    !process.env.RAPIDAPI_KEY ||
+    !process.env.RAPIDAPI_HOST
+  ) {
+    throw new Error("Environment variables are not set");
+  }
+
+  const request: TuroRequest = {
+    query: prompt,
+  };
+
+  try {
+    return await fetch(process.env.TURO_URL, {
       method: "post",
-      body: JSON.stringify({
-        query: reason.value,
-      }),
+      body: JSON.stringify(request),
       headers: {
         "Content-Type": "application/json",
         "x-rapidapi-key": process.env.RAPIDAPI_KEY,
         "x-rapidapi-host": process.env.RAPIDAPI_HOST,
       },
     });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
 
-    if (request && request.status == 200) {
-      const response: ITuroResponse = (await request.json()) as ITuroResponse;
-      // handle request status
-      if (response.content?.length > 2000) {
-        await interaction.editReply(
-          "I'm sorry I can not process your request."
-        );
-      } else {
-        await interaction.editReply(response.content);
-      }
-    } else {
-      await interaction.editReply("I'm sorry I can not process your request.");
-    }
-  },
-};
-
-// This is super important and allows other
-// .ts files in the project to access the
-// ICommand object created above!
 module.exports = turoCommand;
