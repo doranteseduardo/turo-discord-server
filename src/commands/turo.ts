@@ -23,7 +23,7 @@ const turoCommand: ICommand = {
     .setDescription("Ask Turo anything about Pokémon UNITE!"),
 
   async execute(interaction) {
-    const prompt = interaction.options.getString("prompt", true);
+    const prompt = interaction.options.get("prompt") ?? "";
 
     if (!prompt) {
       await interaction.reply("You can not pass an empty prompt!");
@@ -33,7 +33,7 @@ const turoCommand: ICommand = {
     await interaction.deferReply();
 
     try {
-      const response = await makeTuroRequest(prompt);
+      const response = await makeTuroRequest(prompt.value as string);
       const turoResponse = await response.json();
 
       if (turoResponse.content && turoResponse.content.length > 2000) {
