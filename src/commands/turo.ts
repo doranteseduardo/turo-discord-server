@@ -29,10 +29,11 @@ const turoCommand: ICommand = {
   // when a user sends the command in to the bot. In this case,
   // it simply replies to the user with the string "pong!"
   async execute(interaction) {
+    /*
     await interaction.reply(
       "Thanks for using Turo, but the service has been discontinued. Please try using the mobile app instead."
     );
-    return;
+    return;*/
     const reason = interaction.options.get("prompt")?.value ?? "";
 
     if (!reason) {
