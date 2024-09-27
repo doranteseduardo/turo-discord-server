@@ -13,6 +13,9 @@ RUN npm install
 # Copy the rest of the application code to the container
 COPY . .
 
+# Make port 3000 available to the world outside this container
+EXPOSE 3000
+
 # Build the TypeScript code
 RUN npm run build
 
