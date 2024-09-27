@@ -1,7 +1,9 @@
 import { SlashCommandBuilder } from "discord.js";
 import { ICommand } from "../interfaces/ICommand";
 import { ITuroResponse } from "../interfaces/ITuroResponse";
+import dotenv from "dotenv";
 const fetch = require("node-fetch");
+dotenv.config();
 
 // This askCommand const will hold the ICommand object,
 // which has data about the command, and an execute function
